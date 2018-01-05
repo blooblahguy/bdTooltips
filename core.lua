@@ -13,7 +13,7 @@ defaults[#defaults+1] = {mott = {
 	type = "checkbox",
 	value = true,
 	label = "Eanble mini name hover tooltips",
-	callback = function() configCallback() end
+	callback = configCallback
 }}
 
 bdCore:addModule("Tooltips", defaults)
