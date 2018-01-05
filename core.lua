@@ -7,13 +7,18 @@ local configCallback = function() end
 defaults[#defaults+1] = {enablett = {
 	type = "checkbox",
 	value = true,
-	label = "Eanble Main Tooltips"
+	label = "Enable Main Tooltips"
 }}
 defaults[#defaults+1] = {mott = {
 	type = "checkbox",
 	value = true,
+<<<<<<< HEAD
 	label = "Eanble mini name hover tooltips",
 	callback = configCallback
+=======
+	label = "Enable mini name hover tooltips",
+	callback = function() configCallback() end
+>>>>>>> 2ee069a69ec1564b8c8e2a22432e0c7d63d9fa35
 }}
 
 bdCore:addModule("Tooltips", defaults)
