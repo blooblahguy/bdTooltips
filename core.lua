@@ -140,7 +140,15 @@ function setUnit(self)
 	local factionGroup = select(1, UnitFactionGroup(unit))
 	local isFriend = UnitIsFriend("player", unit)
 	local levelColor = GetQuestDifficultyColor(level)
-	local reactionColor = bdt:getColor(unit)
+	local reactionColor = bdt:getBasicColor(unit)
+	local gender = UnitSex(unit)
+	if (gender == 1) then
+		gender = " M "
+	elseif (gender == 2) then
+		gender = " F "
+	else
+		gender = ""
+	end
 	local friendColor = {r = 1, g = 1, b = 1}
 	if (factionGroup == 'Horde' or not isFriend) then
 		friendColor = {
@@ -159,22 +167,25 @@ function setUnit(self)
 	if UnitIsPlayer(unit) then
 		if guild then
 			GameTooltipTextLeft2:SetFormattedText('<%s>', guild)
-			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBToHex(levelColor), level, RGBToHex(friendColor), race)
+			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), gender..race)
 		else
 			GameTooltip:AddLine("",1,1,1)
-			GameTooltipTextLeft2:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBToHex(levelColor), level, RGBToHex(friendColor), race)
+			GameTooltipTextLeft2:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), gender..race)
 		end
-
-		local r, g, b = GameTooltip_UnitColor(unit..'target')
-		GameTooltip:AddLine(UnitName(unit..'target'), r, g, b)
 	else
 		for i = 2, lines do
 			local line = _G['GameTooltipTextLeft'..i]
 			if not line or not line:GetText() then break end
 			if (level and line:GetText():find('^'..LEVEL) or (creatureType and line:GetText():find('^'..creatureType))) then
-				line:SetFormattedText('|cff%s%s%s|r |cff%s%s|r', RGBToHex(levelColor), level, classification, RGBToHex(friendColor), creatureType or 'Unknown')
+				line:SetFormattedText('|cff%s%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, classification, RGBPercToHex(friendColor), creatureType or 'Unknown')
 			end
 		end
+	end
+
+
+	if (UnitExists(unit..'target')) then
+		local r, g, b = GameTooltip_UnitColor(unit..'target')
+		GameTooltip:AddDoubleLine("Target", UnitName(unit..'target'), .7, .7, .7, r, g, b)
 	end
 
 	--[[if UnitIsPlayer(unit) then
@@ -245,7 +256,10 @@ function setUnit(self)
 	GameTooltipStatusBar.unit = unit
 	GameTooltipStatusBar:SetMinMaxValues(0, max)
 	GameTooltipStatusBar:SetValue(hp)
-	GameTooltipStatusBar:SetStatusBarColor( bdt:getColor(unit, true))
+	GameTooltipStatusBar:ClearAllPoints()
+GameTooltipStatusBar:SetPoint("TOPLEFT", self, "TOPLEFT")
+GameTooltipStatusBar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, -6)
+	GameTooltipStatusBar:SetStatusBarColor( bdt:getBasicColor(unit, true))
 
 	-- Set Fonts
 	for i = 1, 20 do
@@ -257,7 +271,7 @@ end
 
 -- add text to the healthbar on tooltips
 GameTooltipStatusBar.text = GameTooltipStatusBar:CreateFontString(nil)
-GameTooltipStatusBar.text:SetFont(bdCore.media.font, 13)
+GameTooltipStatusBar.text:SetFont(bdCore.media.font, 11, "THINOUTLINE")
 GameTooltipStatusBar.text:SetAllPoints()
 GameTooltipStatusBar.text:SetJustifyH("CENTER")
 GameTooltipStatusBar.text:SetJustifyV("MIDDLE")
@@ -292,7 +306,7 @@ end)
 -- hook main styling functions
 ---------------------------------------------------------------------
 GameTooltip:HookScript('OnTooltipSetUnit', setUnit)
-function GameTooltip_UnitColor(unitToken) return bdt:getColor(unitToken) end
+function GameTooltip_UnitColor(unitToken) return bdt:getBasicColor(unitToken) end
 
 
 --GameTooltip:SetScript('OnUpdate', setFirstLine)
