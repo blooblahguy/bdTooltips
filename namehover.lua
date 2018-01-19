@@ -29,7 +29,7 @@ local function getcolor()
 end
 
 bdt.motooltip = CreateFrame('frame',nil)
-local motooltip = core.motooltip
+local motooltip = bdt.motooltip
 motooltip:SetFrameStrata("TOOLTIP")
 motooltip.text = motooltip:CreateFontString(nil, "OVERLAY")
 motooltip.text:SetFont(bdCore.media.font, 11, "THINOUTLINE")

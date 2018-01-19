@@ -140,7 +140,7 @@ function setUnit(self)
 	local factionGroup = select(1, UnitFactionGroup(unit))
 	local isFriend = UnitIsFriend("player", unit)
 	local levelColor = GetQuestDifficultyColor(level)
-	local reactionColor = getColor(unit)
+	local reactionColor = bdt:getColor(unit)
 	--local friendColor = {r = 1, g = 1, b = 1}
 	
 	--[[
@@ -234,7 +234,7 @@ function setUnit(self)
 	GameTooltipStatusBar.unit = unit
 	GameTooltipStatusBar:SetMinMaxValues(0, max)
 	GameTooltipStatusBar:SetValue(hp)
-	GameTooltipStatusBar:SetStatusBarColor( unpack(bct:getColor(unit, true)) )
+	GameTooltipStatusBar:SetStatusBarColor( bdt:getColor(unit, true))
 	-- this sucks at updating while you are hovering
 	GameTooltipStatusBar:RegisterEvent("UNIT_HEALTH")
 	GameTooltipStatusBar:SetStatusBarTexture(bdCore.media.flat)
@@ -254,7 +254,7 @@ function setUnit(self)
 end
 
 GameTooltip:HookScript('OnTooltipSetUnit', setUnit)
-function GameTooltip_UnitColor(unitToken) return unitColor(unitToken) end
+function GameTooltip_UnitColor(unitToken) return bdt:getColor(unitToken) end
 --GameTooltip:SetScript('OnUpdate', setFirstLine)
 
 --[[
