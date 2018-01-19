@@ -4,5 +4,6 @@
 ## LoadOnDemand: 0
 ## Dependencies: bdCore
 
+functions.lua
 core.lua
 namehover.lua

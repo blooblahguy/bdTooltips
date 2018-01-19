@@ -1,4 +1,4 @@
-local addonName, core = ...
+local addonName, bdt = ...
 
 local config = bdCore.config.profile['Tooltips']
 
@@ -28,7 +28,7 @@ local function getcolor()
 	end
 end
 
-core.motooltip = CreateFrame('frame',nil)
+bdt.motooltip = CreateFrame('frame',nil)
 local motooltip = core.motooltip
 motooltip:SetFrameStrata("TOOLTIP")
 motooltip.text = motooltip:CreateFontString(nil, "OVERLAY")
