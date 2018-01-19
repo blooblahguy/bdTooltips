@@ -3,8 +3,6 @@ local addon, bdt = ...
 ------------------------------------
 -- Colors
 ------------------------------------
-
---[[
 local colors = {}
 colors.tapped = {.6,.6,.6}
 colors.offline = {.6,.6,.6}
@@ -23,7 +21,7 @@ for eclass, color in next, FACTION_BAR_COLORS do
 	if not colors.reaction[eclass] then
 		colors.reaction[eclass] = {color.r, color.g, color.b}
 	end
-end--]]
+end
 
 ------------------------------------
 -- Helper funcs
@@ -44,16 +42,7 @@ end
 
 --[[
 local function unitColor(unit)
-	if (not UnitExists(unit)) then
-		return unpack(colors.tapped)
-	end
-	if UnitIsPlayer(unit) then
-		return unpack(colors.class[select(2, UnitClass(unit))])
-	elseif UnitIsTapDenied(unit) then
-		return unpack(colors.tapped)
-	else
-		return unpack(colors.reaction[UnitReaction(unit, 'player')])
-	end
+	
 end--]]
 
 -- returns a 1-6 of how this unit reacts to you
@@ -78,8 +67,21 @@ function bdt:getUnitReactionIndex(unit)
 	end
 end
 
+function bdt:getReactionColor(unit)
+	if (not UnitExists(unit)) then
+		return unpack(colors.tapped)
+	end
+	if UnitIsPlayer(unit) then
+		return unpack(colors.class[select(2, UnitClass(unit))])
+	elseif UnitIsTapDenied(unit) then
+		return unpack(colors.tapped)
+	else
+		return unpack(colors.reaction[UnitReaction(unit, 'player')])
+	end
+end
+
 -- passes back a perc color for unit, based on reaction, offline, player
-function bdt:getColor(unit, alwaysColor)
+function bdt:getBasicColor(unit, alwaysColor)
 	local reaction = UnitReaction("mouseover", "player") or 5
 
 	-- sometimes we want to show grey for tapped/dead/offline, sometimes we want the colors

@@ -141,9 +141,7 @@ function setUnit(self)
 	local isFriend = UnitIsFriend("player", unit)
 	local levelColor = GetQuestDifficultyColor(level)
 	local reactionColor = bdt:getColor(unit)
-	--local friendColor = {r = 1, g = 1, b = 1}
-	
-	--[[
+	local friendColor = {r = 1, g = 1, b = 1}
 	if (factionGroup == 'Horde' or not isFriend) then
 		friendColor = {
 			r = 1, 
@@ -156,12 +154,27 @@ function setUnit(self)
 			g = 0.55, 
 			b = 1
 		}
-	end--]]
+	end
 	
 	if UnitIsPlayer(unit) then
+		if guild then
+			GameTooltipTextLeft2:SetFormattedText('<%s>', guild)
+			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBToHex(levelColor), level, RGBToHex(friendColor), race)
+		else
+			GameTooltip:AddLine("",1,1,1)
+			GameTooltipTextLeft2:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBToHex(levelColor), level, RGBToHex(friendColor), race)
+		end
 
+		local r, g, b = GameTooltip_UnitColor(unit..'target')
+		GameTooltip:AddLine(UnitName(unit..'target'), r, g, b)
 	else
-
+		for i = 2, lines do
+			local line = _G['GameTooltipTextLeft'..i]
+			if not line or not line:GetText() then break end
+			if (level and line:GetText():find('^'..LEVEL) or (creatureType and line:GetText():find('^'..creatureType))) then
+				line:SetFormattedText('|cff%s%s%s|r |cff%s%s|r', RGBToHex(levelColor), level, classification, RGBToHex(friendColor), creatureType or 'Unknown')
+			end
+		end
 	end
 
 	--[[if UnitIsPlayer(unit) then
@@ -228,22 +241,11 @@ function setUnit(self)
 	-- Update hp values on the bar
 	local hp = UnitHealth(unit)
 	local max = UnitHealthMax(unit)
-	GameTooltipStatusBar:ClearAllPoints()
-	GameTooltipStatusBar:SetPoint("TOPLEFT", self, "TOPLEFT")
-	GameTooltipStatusBar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, -6)
+	
 	GameTooltipStatusBar.unit = unit
 	GameTooltipStatusBar:SetMinMaxValues(0, max)
 	GameTooltipStatusBar:SetValue(hp)
 	GameTooltipStatusBar:SetStatusBarColor( bdt:getColor(unit, true))
-	-- this sucks at updating while you are hovering
-	GameTooltipStatusBar:RegisterEvent("UNIT_HEALTH")
-	GameTooltipStatusBar:SetStatusBarTexture(bdCore.media.flat)
-	GameTooltipStatusBar:SetScript("OnEvent", function(self)
-		local hp = UnitHealth(self.unit)
-		local max = UnitHealthMax(self.unit)
-		self:SetMinMaxValues(0, max)
-		self:SetValue(hp)
-	end)
 
 	-- Set Fonts
 	for i = 1, 20 do
@@ -253,8 +255,46 @@ function setUnit(self)
 	end
 end
 
+-- add text to the healthbar on tooltips
+GameTooltipStatusBar.text = GameTooltipStatusBar:CreateFontString(nil)
+GameTooltipStatusBar.text:SetFont(bdCore.media.font, 13)
+GameTooltipStatusBar.text:SetAllPoints()
+GameTooltipStatusBar.text:SetJustifyH("CENTER")
+GameTooltipStatusBar.text:SetJustifyV("MIDDLE")
+
+GameTooltipStatusBar:ClearAllPoints()
+GameTooltipStatusBar:SetPoint("TOPLEFT", self, "TOPLEFT")
+GameTooltipStatusBar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, -6)
+GameTooltipStatusBar:SetStatusBarTexture(bdCore.media.flat)
+
+-- this sucks at updating while you are hovering
+GameTooltipStatusBar:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+GameTooltipStatusBar:RegisterEvent("UNIT_HEALTH")
+GameTooltipStatusBar:SetScript("OnEvent", function(self)
+	if (not self.unit) then self.unit = GetMouseFocus() and GetMouseFocus():GetAttribute("unit") end
+	if (not self.unit) then return end
+
+	local hp, max = UnitHealth(self.unit), UnitHealthMax(self.unit)
+	self:SetMinMaxValues(0, max)
+	self:SetValue(hp)
+
+	local perc = 0
+	if (hp > 0 and max > 0) then
+		perc = math.floor((hp / max) * 100)
+	end
+	if (not max) then
+		perc = ''
+	end
+	self.text:SetText(perc)
+end)
+
+---------------------------------------------------------------------
+-- hook main styling functions
+---------------------------------------------------------------------
 GameTooltip:HookScript('OnTooltipSetUnit', setUnit)
 function GameTooltip_UnitColor(unitToken) return bdt:getColor(unitToken) end
+
+
 --GameTooltip:SetScript('OnUpdate', setFirstLine)
 
 --[[
@@ -438,37 +478,3 @@ end)
 hooksecurefunc(GameTooltip, "SetCurrencyTokenByID", function(self, id)
 	if id then addLine(self, id, types.currency) end
 end)
-
-------------------------
--- set this at the tooltip anchor frame
-
---[[
-
-
--- Show unit name at mouse
-tooltip:SetScript("OnUpdate", function(self)
-	if GetMouseFocus() and GetMouseFocus():IsForbidden() then self:Hide() return end
-	if GetMouseFocus() and GetMouseFocus():GetName()~="WorldFrame" then self:Hide() return end
-	if not UnitExists("mouseover") then self:Hide() return end
-	local x, y = GetCursorPosition()
-	local scale = UIParent:GetEffectiveScale()
-	self.text:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y+15)
-end)
-tooltip:SetScript("OnEvent", function(self)
-	if GetMouseFocus():GetName()~="WorldFrame" then return end
-	
-	local name = UnitName("mouseover")
-	local AFK = UnitIsAFK("mouseover")
-	local DND = UnitIsDND("mouseover")
-	local prefix = ""
-	
-	if AFK then prefix = "<AFK> " end
-	if DND then prefix = "<DND> " end
-	
-	self.text:SetTextColor(getcolor())
-	self.text:SetText(prefix..name)
-
-	self:Show()
-end)
-tooltip:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
---]]
