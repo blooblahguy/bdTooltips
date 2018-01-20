@@ -1,5 +1,108 @@
 local addon, bdt = ...
 
+
+
+------------------------------------
+-- Enhanced Gametooltip - credit to RantTooltip
+------------------------------------
+GameTooltip["GetLine"] = function(self, num)
+	if type(num) == "table" then
+		num = num:GetName():gsub("GameTooltipTextLeft", "")
+		num = tonumber(num)
+		return num
+	else
+		return _G["GameTooltipTextLeft"..num]
+	end
+end
+
+--Find a line
+GameTooltip["FindLine"] = function(self, msg, exact, from) 
+	if not msg then return end
+	local lines = self:NumLines(true)
+	for i = from or 1, lines do
+		local line = _G["GameTooltipTextLeft"..i]
+		local text = line and line:GetText()
+		if text and ((exact and text == msg) or (not exact and text:find(msg))) then
+			return line, i
+		end
+	end
+end
+
+--Num Lines
+local _NumLines = GameTooltip.NumLines
+GameTooltip["NumLines"] = function(self, ignoreDeleted)
+	if ignoreDeleted then
+		local line, realLines, i = true, 0, 0
+		while line do
+			i = i + 1
+			line = _G[self:GetName().."TextLeft"..i]
+			local text = line and line:GetText()
+			if text and string.len(text) > 0 then
+				realLines = realLines + 1
+			else
+				break
+			end
+		end
+		return realLines
+	end
+	return _NumLines(self)
+end
+
+--An adjustment for the tooltip statusbars (originally added for achievements) for whenever there is a line adjustment
+GameTooltip["AdjustStatusBars"] = function(self, offset)
+	local bar, i = GameTooltipStatusBar1, 1
+	while bar do
+		if bar:IsVisible() then
+			local point = { bar:GetPoint() }
+			local number = self:GetLine(point[2]) + offset
+			point[2] = _G["GameTooltipTextLeft"..number]
+			bar:SetPoint(unpack(point))
+		end
+		i = i + 1
+		bar = _G["GameTooltipStatusBar"..i]
+	end
+end
+
+--Delete Line
+GameTooltip["DeleteLine"] = function(self, line, exact)
+	local numLines, originalNum, barNum = self:NumLines()
+	if type(line) == "number" then
+		line = _G["GameTooltipTextLeft"..line]
+	elseif type(line) == "string" then
+		line = self:FindLine(line, exact)
+	end
+	if line then
+		originalNum = self:GetLine(line)
+		if line ~= _G["GameTooltipTextLeft"..numLines] then
+			local number = self:GetLine(line)
+			local tbl = {}
+			for i = number+1, numLines do
+				tbl[i-1] = _G["GameTooltipTextLeft"..i]
+			end
+			for k, v in pairs(tbl) do
+				local text = v:GetText()
+				local newLine = _G["GameTooltipTextLeft"..k]
+				if v:GetStringHeight() > select(2,v:GetFont()) then
+					text = wrapText(text)
+				end
+				newLine.deleted = v.deleted
+				newLine:SetText(text)
+				newLine:SetTextColor(v:GetTextColor())
+			end
+			line = _G["GameTooltipTextLeft"..numLines]
+			if not line then return end
+		end
+		line.deleted = true
+		line:SetText("")
+		line:Hide()
+		self:Show()
+		barNum = select(2, self:FindLine(" ", true))
+		if barNum and originalNum <= barNum then
+			self:AdjustStatusBars(-1)
+		end
+	end
+end
+
 ------------------------------------
 -- Colors
 ------------------------------------
@@ -55,11 +158,6 @@ function RGBPercToHex(r, g, b)
 	return string.format("%02x%02x%02x", r*255, g*255, b*255)
 end
 
---[[
-local function unitColor(unit)
-	
-end--]]
-
 -- returns a 1-6 of how this unit reacts to you
 function bdt:getUnitReactionIndex(unit)
 	if UnitIsDeadOrGhost(unit) then
@@ -95,38 +193,3 @@ function bdt:getReactionColor(unit)
 	end
 end
 
--- passes back a perc color for unit, based on reaction, offline, player
-function bdt:getBasicColor(unit, alwaysColor)
-	local reaction = UnitReaction("mouseover", "player") or 5
-
-	-- sometimes we want to show grey for tapped/dead/offline, sometimes we want the colors
-	if (not alwaysColor) then
-		if (not UnitExists(unit) or UnitIsDead(unit) or UnitIsTapDenied(unit)) then
-			return 136/255, 136/255, 136/255
-		end
-	end
-
-	-- player
-	if (UnitIsPlayer("mouseover")) then
-		local _, class = UnitClass("mouseover")
-		local color = RAID_CLASS_COLORS[class]
-		return color.r, color.g, color.b
-	-- npc
-	elseif (UnitCanAttack("player", "mouseover")) then
-		-- hostile
-		if (reaction < 4) then
-			return 1, 68/255, 68/255
-		-- nuetral
-		elseif (reaction == 4) then
-			return 1, 1, 68/255
-		end
-	else
-		-- friendly
-		if (reaction < 4) then
-			return 48/255, 113/255, 191/255
-		else
-		-- no reaction, just white
-			return 1, 1, 1
-		end
-	end
-end

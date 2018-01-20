@@ -1,39 +1,7 @@
 ﻿local addonName, bdt = ...
 
-
-------------------------------------
--- Config
-------------------------------------
-local defaults = {}
-local configCallback = function() end
-
-defaults[#defaults+1] = {enablett = {
-	type = "checkbox",
-	value = true,
-	label = "Main Tooltips"
-}}
-defaults[#defaults+1] = {mott = {
-	type = "checkbox",
-	value = true,
-	label = "Mini name hover tooltips",
-	callback = configCallback
-}}
-
-bdCore:addModule("Tooltips", defaults)
 local config = bdCore.config.profile['Tooltips']
 
-local configCallback = function()
-	if config.mott then
-		bdt.motooltip:Show()
-	end
-end
-
-local bordersize = bdCore.config.persistent.General.bordersize
-
-local tooltip = CreateFrame('frame',nil)
-tooltip:SetFrameStrata("TOOLTIP")
-tooltip.text = tooltip:CreateFontString(nil, "OVERLAY")
-tooltip.text:SetFont(bdCore.media.font, 11, "THINOUTLINE")
 
 -----------------------------------
 -- Skinning default tooltips
@@ -58,31 +26,6 @@ for i = 1, #tooltips do
 	bdCore:setBackdrop(frame)
 	frame:SetScale(1)
 end
-
---[[
-local function setFirstLine(self)
-	local name, unit = self:GetUnit()
-	if not unit then return end
-	
-	local targetstr = "";
-	local namestr = "";
-	if (UnitExists(unit.."target")) then
-		local target = GetUnitName(unit.."target")
-		local cname, cclass = UnitClass(unit.."target")
-		local targetcolor = RAID_CLASS_COLORS[cclass]
-		local hex = RGBPercToHex(targetcolor.r, targetcolor.g, targetcolor.b)
-		targetstr = "@|cff"..hex..target.."|r"
-	end
-	
-	local name = GetUnitName(unit, true)
-	local cname, cclass = UnitClass(unit)
-	local color = RAID_CLASS_COLORS[cclass]
-	local hex = RGBPercToHex(color.r, color.g, color.b)
-	namestr = "|cff"..hex..name.."|r"
-	
-	GameTooltipTextLeft1:SetTextColor(1,1,1)
-	GameTooltipTextLeft1:SetFormattedText('%s %s', namestr,targetstr)
-end--]]
 
 local function whosTargeting(self)
 	local name, unit = self:GetUnit()
@@ -112,6 +55,8 @@ local function whosTargeting(self)
 	end
 end
 
+
+
 local hide = {}
 hide["Horde"] = true
 hide["Alliance"] = true
@@ -119,6 +64,7 @@ hide["PvE"] = true
 hide["PvP"] = true
 
 function setUnit(self)
+	if (not config.enablett) then return end -- disable these, in case people only want mouseover mini-tooltips and don't want to use full bdTooltips
 	if (self:IsForbidden()) then return end -- don't mess with forbidden frames, which sometimes randomly happens
 
 	local name, unit = self:GetUnit()
@@ -128,27 +74,26 @@ function setUnit(self)
 	if not unit then return end
 
 	-- now lets modify the tooltip
-	local lines = self:NumLines()
+	local numLines = self:NumLines()
 
 	local line = 1;
 	name = GetUnitName(unit)
 	local guild, rank = GetGuildInfo(unit)
 	local race = UnitRace(unit) or ""
-	local level = UnitLevel(unit)
 	local classification = UnitClassification(unit)
 	local creatureType = UnitCreatureType(unit)
 	local factionGroup = select(1, UnitFactionGroup(unit))
-	local isFriend = UnitIsFriend("player", unit)
+	local reactionColor = bdt:getReactionColor(unit)
+	
+
+	local level = UnitLevel(unit)
 	local levelColor = GetQuestDifficultyColor(level)
-	local reactionColor = bdt:getBasicColor(unit)
-	local gender = UnitSex(unit)
-	if (gender == 1) then
-		gender = " M "
-	elseif (gender == 2) then
-		gender = " F "
-	else
-		gender = ""
+	if level == -1 then
+		level = '??'
+		levelColor = {r = 1,g = 0,b = 0}
 	end
+
+	local isFriend = UnitIsFriend("player", unit)
 	local friendColor = {r = 1, g = 1, b = 1}
 	if (factionGroup == 'Horde' or not isFriend) then
 		friendColor = {
@@ -163,28 +108,42 @@ function setUnit(self)
 			b = 1
 		}
 	end
+
+	-- Tags
+	local dnd = function()
+		return UnitIsAFK(unit) and "|cffAAAAAA<AFK>|r " or UnitIsDND(unit) and "|cffAAAAAA<DND>|r " or ""
+	end
+
+	-- build the tooltip and its lines
+	local lines = {}
+	lines[1] = GameTooltipTextLeft1:GetText()
 	
 	if UnitIsPlayer(unit) then
+		GameTooltipTextLeft1:SetFormattedText('%s%s', dnd(), UnitName(unit))
 		if guild then
 			GameTooltipTextLeft2:SetFormattedText('<%s>', guild)
-			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), gender..race)
+			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), race)
 		else
 			GameTooltip:AddLine("",1,1,1)
-			GameTooltipTextLeft2:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), gender..race)
+			GameTooltipTextLeft2:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), race)
 		end
 	else
-		for i = 2, lines do
+		for i = 2, numLines do
 			local line = _G['GameTooltipTextLeft'..i]
 			if not line or not line:GetText() then break end
 			if (level and line:GetText():find('^'..LEVEL) or (creatureType and line:GetText():find('^'..creatureType))) then
-				line:SetFormattedText('|cff%s%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, classification, RGBPercToHex(friendColor), creatureType or 'Unknown')
+				line:SetFormattedText('|cff%s%s %s|r |cff%s%s|r', RGBPercToHex(levelColor), level, classification, RGBPercToHex(friendColor), creatureType or 'Unknown')
 			end
 		end
 	end
 
+	-- delete lines in the "hide" table
+	for k, v in pairs(hide)do
+		GameTooltip:DeleteLine(k, true)
+	end
 
 	if (UnitExists(unit..'target')) then
-		local r, g, b = GameTooltip_UnitColor(unit..'target')
+		local r, g, b = bdt:getReactionColor(unit..'target')
 		GameTooltip:AddDoubleLine("Target", UnitName(unit..'target'), .7, .7, .7, r, g, b)
 	end
 
@@ -257,9 +216,8 @@ function setUnit(self)
 	GameTooltipStatusBar:SetMinMaxValues(0, max)
 	GameTooltipStatusBar:SetValue(hp)
 	GameTooltipStatusBar:ClearAllPoints()
-GameTooltipStatusBar:SetPoint("TOPLEFT", self, "TOPLEFT")
-GameTooltipStatusBar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, -6)
-	GameTooltipStatusBar:SetStatusBarColor( bdt:getBasicColor(unit, true))
+	GameTooltipStatusBar:SetPoint("BOTTOMLEFT", self, "TOPLEFT")
+	GameTooltipStatusBar:SetPoint("TOPRIGHT", self, "TOPRIGHT", 0, 6)
 
 	-- Set Fonts
 	for i = 1, 20 do
@@ -276,21 +234,22 @@ GameTooltipStatusBar.text:SetAllPoints()
 GameTooltipStatusBar.text:SetJustifyH("CENTER")
 GameTooltipStatusBar.text:SetJustifyV("MIDDLE")
 
-GameTooltipStatusBar:ClearAllPoints()
-GameTooltipStatusBar:SetPoint("TOPLEFT", self, "TOPLEFT")
-GameTooltipStatusBar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, -6)
-GameTooltipStatusBar:SetStatusBarTexture(bdCore.media.flat)
+-- GameTooltipStatusBar:ClearAllPoints()
+-- GameTooltipStatusBar:SetPoint("TOPLEFT", self, "TOPLEFT", 0, -6)
+-- GameTooltipStatusBar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT")
+GameTooltipStatusBar:SetStatusBarTexture(bdCore.media.smooth)
+bdCore:setBackdrop(GameTooltipStatusBar)
 
 -- this sucks at updating while you are hovering
 GameTooltipStatusBar:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 GameTooltipStatusBar:RegisterEvent("UNIT_HEALTH")
 GameTooltipStatusBar:SetScript("OnEvent", function(self)
-	if (not self.unit) then self.unit = GetMouseFocus() and GetMouseFocus():GetAttribute("unit") end
 	if (not self.unit) then return end
 
 	local hp, max = UnitHealth(self.unit), UnitHealthMax(self.unit)
 	self:SetMinMaxValues(0, max)
 	self:SetValue(hp)
+	self:SetStatusBarColor( bdt:getReactionColor(self.unit))
 
 	local perc = 0
 	if (hp > 0 and max > 0) then
@@ -306,7 +265,7 @@ end)
 -- hook main styling functions
 ---------------------------------------------------------------------
 GameTooltip:HookScript('OnTooltipSetUnit', setUnit)
-function GameTooltip_UnitColor(unitToken) return bdt:getBasicColor(unitToken) end
+function GameTooltip_UnitColor(unitToken) return bdt:getReactionColor(unitToken) end
 
 
 --GameTooltip:SetScript('OnUpdate', setFirstLine)
@@ -417,78 +376,108 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_TRADESKILLS", addIcons)
 ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", addIcons)
 ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", addIcons)
 
-local types = {
-	item        = "ItemID:",
-	currency    = "CurrencyID:"
-}
-
-local function addLine(tooltip, id, type)
-	local found = false
-
-	for i = 1,15 do
-		local frame = _G[tooltip:GetName() .. "TextLeft" .. i]
-		local text
-		if frame then text = frame:GetText() end
-		if text and text == type then found = true break end
-	end
-
-	if not found then
-		tooltip:AddDoubleLine(type, "|cffffffff" .. id)
-		tooltip:Show()
-	end
-end
-
 local function onSetHyperlink(self, link)
 	local type, id = string.match(link,"^(%a+):(%d+)")
 	if not type or not id then return end
 	if type == "item" then
-		addLine(self, id, types.item)
+		if not config.enableitemids then return end
+		GameTooltip:AddDoubleLine("ItemID:", id)
 	elseif type == "currency" then
-		addLine(self, id, types.currency)
+		GameTooltip:AddDoubleLine("CurrencyID:", id)
+	elseif type == "spell" then
+		if not config.enablespellids then return end
+		GameTooltip:AddDoubleLine("SpellID:", id)
 	end
-end
 
+end
 hooksecurefunc(ItemRefTooltip, "SetHyperlink", onSetHyperlink)
 hooksecurefunc(GameTooltip, "SetHyperlink", onSetHyperlink)
 
-local function attachItemTooltip(self)
+local function setSpellID(self)
+	if (not config.enablespellids) then return end
+	local id = select(3, self:GetSpell())
+	if (id) then
+		GameTooltip:AddDoubleLine("SpellID:", id)
+	end
+end
+
+local function setItemID(self)
+	if (not config.enableitemids) then return end
 	local link = select(2, self:GetItem())
 	if link then
-		local id = select(3, strfind(link, "^|%x+|Hitem:(%-?%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%-?%d+):(%-?%d+)"))
-		if id == "0" and TradeSkillFrame ~= nil and TradeSkillFrame:IsVisible() then
-			if (GetMouseFocus():GetName()) == "TradeSkillSkillIcon" then
-				id = GetTradeSkillItemLink(TradeSkillFrame.selectedSkill):match("item:(%d+):") or nil
-			else
-				for i = 1, 8 do
-					if (GetMouseFocus():GetName()) == "TradeSkillReagent"..i then
-						id = GetTradeSkillReagentItemLink(TradeSkillFrame.selectedSkill, i):match("item:(%d+):") or nil
-						break
-					end
-				end
-			end
-		end
+		local itemString = string.match(link, "item[%-?%d:]+")
+		local id = select(2, strsplit(":", itemString))
 		if id then
-			addLine(self, id, types.item)
+			GameTooltip:AddDoubleLine("itemID:", id)
 		end
 	end
 end
 
-GameTooltip:HookScript("OnTooltipSetItem", attachItemTooltip)
-ItemRefTooltip:HookScript("OnTooltipSetItem", attachItemTooltip)
-ItemRefShoppingTooltip1:HookScript("OnTooltipSetItem", attachItemTooltip)
-ItemRefShoppingTooltip2:HookScript("OnTooltipSetItem", attachItemTooltip)
-ShoppingTooltip1:HookScript("OnTooltipSetItem", attachItemTooltip)
-ShoppingTooltip2:HookScript("OnTooltipSetItem", attachItemTooltip)
+GameTooltip:HookScript("OnTooltipSetSpell", setSpellID)
+GameTooltip:HookScript("OnTooltipSetItem", setItemID)
+ItemRefTooltip:HookScript("OnTooltipSetItem", setItemID)
+ItemRefShoppingTooltip1:HookScript("OnTooltipSetItem", setItemID)
+ItemRefShoppingTooltip2:HookScript("OnTooltipSetItem", setItemID)
+ShoppingTooltip1:HookScript("OnTooltipSetItem", setItemID)
+ShoppingTooltip2:HookScript("OnTooltipSetItem", setItemID)
 
 hooksecurefunc(GameTooltip, "SetCurrencyToken", function(self, index)
 	local id = tonumber(string.match(GetCurrencyListLink(index),"currency:(%d+)"))
-	if id then addLine(self, id, types.currency) end
+	if (not id) then return end
+	GameTooltip:AddDoubleLine("CurrencyID:", id)
 end)
 
 hooksecurefunc(GameTooltip, "SetCurrencyByID", function(self, id)
-	if id then addLine(self, id, types.currency) end
+	if (not id) then return end
+	GameTooltip:AddDoubleLine("CurrencyID:", id)
 end)
 
 hooksecurefunc(GameTooltip, "SetCurrencyTokenByID", function(self, id)
-	if id then addLine(self, id, types.currency) end
+	if (not id) then return end
+	GameTooltip:AddDoubleLine("CurrencyID:", id)
 end)
+
+----------------------------------------------
+-- Neat Colors to things
+----------------------------------------------
+COOLDOWN_REMAINING = "|CFF999999Cooldown remaining|r"
+ENERGY_COST = "%d |CFFFFFF00Energy|r"
+ITEM_COOLDOWN_TIME = "|CFF999999Cooldown remaining|r %s";
+ITEM_COOLDOWN_TIME_DAYS = "|CFF999999Cooldown remaining|r %d |4day:days;"
+ITEM_COOLDOWN_TIME_HOURS = "|CFF999999Cooldown remaining|r %d |4hour:hours;"
+ITEM_COOLDOWN_TIME_MIN = "|CFF999999Cooldown remaining|r %d min."
+ITEM_COOLDOWN_TIME_SEC = "|CFF999999Cooldown remaining|r %d sec."
+ITEM_MOD_MANA = "%1$c%2$d |CFF3399FFMana|r"
+SPELL_RECAST_TIME_MIN = "|CFF999999%.3g min cooldown|r"
+SPELL_RECAST_TIME_SEC = "|CFF999999%.3g sec cooldown|r"
+MELEE_RANGE = "|CFF00FF00Melee Range|r"
+SPELL_RANGE = "%s |CFF00FF00yd range|r"
+SPELL_ON_NEXT_SWING = "|CFFFF66CCNext melee|r"
+ITEM_SOULBOUND = "|CFFFF6633Soulbound|r"
+ITEM_ACCOUNTBOUND = "|CFFCC66FFAccount Bound|r";
+ITEM_BIND_ON_EQUIP = "|CFFCC66FFBinds when|r |CFFFF66CCequipped|r"
+ITEM_BIND_ON_PICKUP = "|CFFCC66FFBinds when|r |CFFFF66CCpicked up|r"
+ITEM_BIND_ON_USE = "|CFFCC66FFBinds when|r |CFFFF66CCused|r"
+ITEM_BIND_QUEST = "|CFFCC66FFQuest Item|r"
+ITEM_BIND_TO_ACCOUNT = "|CFFCC66FFBinds to account|r"
+DURABILITY_TEMPLATE = "|CFF00CCFFDurability|r %d / %d"
+ITEM_UNIQUE = "|CFFFFFF66Unique|r"
+ITEM_UNIQUE_EQUIPPABLE = "|CFFFFFF66Unique-Equipped|r"
+HEALTH_COST = "%d |CFF00FF00Health|r"
+HEALTH_COST_PER_TIME = "%d |CFF00FF00Health|r, plus %d per sec"
+MANA_COST = "%d |CFF3399FFMana|r"
+MANA_COST_PER_TIME = "%d |CFF3399FFMana|r, plus %d per sec"
+RUNE_COST_BLOOD = "%d |CFFFF0000Blood|r"
+RUNE_COST_FROST = "%d |CFF3399FFFrost|r"
+RUNE_COST_UNHOLY = "%d |CFF00FF00Unholy|r"
+RUNIC_POWER = "|CFF66F0FFRunic Power|r"
+RUNIC_POWER_COST = "%d |CFF66F0FFRunic Power|r"
+RUNIC_POWER_COST_PER_TIME = "%d |CFF66F0FFRunic Power|r, plus %d per sec."
+REQUIRES_RUNIC_POWER = "Requires |CFF66F0FFRunic Power|r"
+SPELL_USE_ALL_ENERGY = "Consumed 100% |CFFFFFF00Energy|r."
+SPELL_USE_ALL_FOCUS = "Consumed 100% |CFFFFCC33Fokus|r."
+SPELL_USE_ALL_HEALTH = "Consumed 100% |CFF00FF00Health|r."
+SPELL_USE_ALL_MANA = "Consumed 100% |CFF3399FFMana|r."
+SPELL_USE_ALL_RAGE = "Consumed 100% |CFFCC3333Rage|r."
+SPELL_CAST_TIME_INSTANT = "|CFFCC66FFInstant cast|r"
+SPELL_CAST_TIME_INSTANT_NO_MANA = "|CFFCC66FFInstant|r"
