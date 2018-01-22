@@ -337,7 +337,7 @@ end--]]
 --	Modify default position
 ---------------------------------------------
 local tooltipanchor = CreateFrame("frame","bdTooltip",UIParent)
-tooltipanchor:SetSize(250, 200)
+tooltipanchor:SetSize(150, 100)
 tooltipanchor:SetPoint("TOPRIGHT", UIParent, "RIGHT", -20, -100)
 bdCore:makeMovable(tooltipanchor)
 
@@ -441,7 +441,7 @@ end)
 -- Neat Colors to things
 ----------------------------------------------
 COOLDOWN_REMAINING = "|CFF999999Cooldown remaining|r"
-ENERGY_COST = "%d |CFFFFFF00Energy|r"
+ENERGY_COST = "%s |CFFFFFF00Energy|r"
 ITEM_COOLDOWN_TIME = "|CFF999999Cooldown remaining|r %s";
 ITEM_COOLDOWN_TIME_DAYS = "|CFF999999Cooldown remaining|r %d |4day:days;"
 ITEM_COOLDOWN_TIME_HOURS = "|CFF999999Cooldown remaining|r %d |4hour:hours;"
@@ -463,16 +463,16 @@ ITEM_BIND_TO_ACCOUNT = "|CFFCC66FFBinds to account|r"
 DURABILITY_TEMPLATE = "|CFF00CCFFDurability|r %d / %d"
 ITEM_UNIQUE = "|CFFFFFF66Unique|r"
 ITEM_UNIQUE_EQUIPPABLE = "|CFFFFFF66Unique-Equipped|r"
-HEALTH_COST = "%d |CFF00FF00Health|r"
-HEALTH_COST_PER_TIME = "%d |CFF00FF00Health|r, plus %d per sec"
-MANA_COST = "%d |CFF3399FFMana|r"
-MANA_COST_PER_TIME = "%d |CFF3399FFMana|r, plus %d per sec"
-RUNE_COST_BLOOD = "%d |CFFFF0000Blood|r"
-RUNE_COST_FROST = "%d |CFF3399FFFrost|r"
-RUNE_COST_UNHOLY = "%d |CFF00FF00Unholy|r"
+HEALTH_COST = "%s |CFF00FF00Health|r"
+HEALTH_COST_PER_TIME = "%s |CFF00FF00Health|r, plus %s per sec"
+MANA_COST = "%s |CFF3399FFMana|r"
+MANA_COST_PER_TIME = "%s |CFF3399FFMana|r, plus %s per sec"
+RUNE_COST_BLOOD = "%s |CFFFF0000Blood|r"
+RUNE_COST_FROST = "%s |CFF3399FFFrost|r"
+RUNE_COST_UNHOLY = "%s |CFF00FF00Unholy|r"
 RUNIC_POWER = "|CFF66F0FFRunic Power|r"
-RUNIC_POWER_COST = "%d |CFF66F0FFRunic Power|r"
-RUNIC_POWER_COST_PER_TIME = "%d |CFF66F0FFRunic Power|r, plus %d per sec."
+RUNIC_POWER_COST = "%s |CFF66F0FFRunic Power|r"
+RUNIC_POWER_COST_PER_TIME = "%s |CFF66F0FFRunic Power|r, plus %s per sec."
 REQUIRES_RUNIC_POWER = "Requires |CFF66F0FFRunic Power|r"
 SPELL_USE_ALL_ENERGY = "Consumed 100% |CFFFFFF00Energy|r."
 SPELL_USE_ALL_FOCUS = "Consumed 100% |CFFFFCC33Fokus|r."

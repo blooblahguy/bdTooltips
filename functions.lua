@@ -48,21 +48,6 @@ GameTooltip["NumLines"] = function(self, ignoreDeleted)
 	return _NumLines(self)
 end
 
---An adjustment for the tooltip statusbars (originally added for achievements) for whenever there is a line adjustment
-GameTooltip["AdjustStatusBars"] = function(self, offset)
-	local bar, i = GameTooltipStatusBar1, 1
-	while bar do
-		if bar:IsVisible() then
-			local point = { bar:GetPoint() }
-			local number = self:GetLine(point[2]) + offset
-			point[2] = _G["GameTooltipTextLeft"..number]
-			bar:SetPoint(unpack(point))
-		end
-		i = i + 1
-		bar = _G["GameTooltipStatusBar"..i]
-	end
-end
-
 --Delete Line
 GameTooltip["DeleteLine"] = function(self, line, exact)
 	local numLines, originalNum, barNum = self:NumLines()
@@ -96,10 +81,6 @@ GameTooltip["DeleteLine"] = function(self, line, exact)
 		line:SetText("")
 		line:Hide()
 		self:Show()
-		barNum = select(2, self:FindLine(" ", true))
-		if barNum and originalNum <= barNum then
-			self:AdjustStatusBars(-1)
-		end
 	end
 end
 
