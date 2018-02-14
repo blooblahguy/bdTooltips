@@ -406,6 +406,7 @@ local function setItemID(self)
 	local link = select(2, self:GetItem())
 	if link then
 		local itemString = string.match(link, "item[%-?%d:]+")
+		if (not itemString) then return end
 		local id = select(2, strsplit(":", itemString))
 		if id then
 			GameTooltip:AddDoubleLine("itemID:", id)
