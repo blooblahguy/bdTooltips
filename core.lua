@@ -6,6 +6,13 @@ local config = bdCore.config.profile['Tooltips']
 -----------------------------------
 -- Skinning default tooltips
 -----------------------------------
+function bdt:skin(tooltip)
+	if (not tooltip.background) then
+		bdCore:setBackdrop(tooltip)
+	end
+	bdCore:StripTextures(tooltip)
+	tooltip:SetScale(1)
+end
 -- for skinning all the tooltips in the UI
 local tooltips = {
 	'GameTooltip',
@@ -20,11 +27,10 @@ local tooltips = {
 	'WorldMapCompareTooltip1',
 	'WorldMapCompareTooltip2',
 }
+
 for i = 1, #tooltips do
 	local frame = _G[tooltips[i]]
-	bdCore:StripTextures(frame)
-	bdCore:setBackdrop(frame)
-	frame:SetScale(1)
+	bdt:skin(frame)
 end
 
 local function whosTargeting(self)
@@ -66,6 +72,8 @@ hide["PvP"] = true
 function setUnit(self)
 	if (not config.enablett) then return end -- disable these, in case people only want mouseover mini-tooltips and don't want to use full bdTooltips
 	if (self:IsForbidden()) then return end -- don't mess with forbidden frames, which sometimes randomly happens
+		
+	-- bdCore:StripTextures(self)
 
 	local name, unit = self:GetUnit()
 	if not unit then
@@ -345,6 +353,8 @@ hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self, parent)
 	self:SetOwner(parent, "ANCHOR_NONE")
 	self:ClearAllPoints()
 	self:SetPoint("TOPRIGHT", tooltipanchor)
+
+	bdt:skin(self)
 end)
 
 ---------------------------------------------
@@ -377,6 +387,7 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", addIcons)
 ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", addIcons)
 
 local function onSetHyperlink(self, link)
+	bdt:skin(self)
 	local type, id = string.match(link,"^(%a+):(%d+)")
 	if not type or not id then return end
 	if type == "item" then
@@ -394,6 +405,7 @@ hooksecurefunc(ItemRefTooltip, "SetHyperlink", onSetHyperlink)
 hooksecurefunc(GameTooltip, "SetHyperlink", onSetHyperlink)
 
 local function setSpellID(self)
+	bdt:skin(self)
 	if (not config.enablespellids) then return end
 	local id = select(3, self:GetSpell())
 	if (id) then
@@ -402,6 +414,7 @@ local function setSpellID(self)
 end
 
 local function setItemID(self)
+	bdt:skin(self)
 	if (not config.enableitemids) then return end
 	local link = select(2, self:GetItem())
 	if link then
