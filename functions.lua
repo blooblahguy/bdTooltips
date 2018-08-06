@@ -5,6 +5,20 @@ local addon, bdt = ...
 ------------------------------------
 -- Enhanced Gametooltip - credit to RantTooltip
 ------------------------------------
+local wrapText = function(text)
+	if text:len() >= 45 then
+		for str in text:gmatch("..%s..") do
+			local last = text:gsub("(.*\n)(.*)", "%2")
+			local startPos = last:find(str)
+			if startPos and startPos >= 45 then
+				local newText = last:sub(1, startPos+1).."\n"..last:sub(startPos+3, last:len())
+				text = text:gsub(last, newText)
+			end
+		end
+	end
+	return text
+end
+
 GameTooltip["GetLine"] = function(self, num)
 	if type(num) == "table" then
 		num = num:GetName():gsub("GameTooltipTextLeft", "")
