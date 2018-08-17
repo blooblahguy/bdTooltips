@@ -34,7 +34,7 @@ local configCallback = function() end
 	defaults[#defaults+1] = {mott = {
 		type = "checkbox",
 		value = true,
-		label = "Enable lite-tooltips on mouseover",
+		label = "Enable lite-tooltips on unit mouseover",
 		callback = configCallback
 	}}
 

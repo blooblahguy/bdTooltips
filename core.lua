@@ -129,7 +129,7 @@ function setUnit(self)
 	if UnitIsPlayer(unit) then
 		GameTooltipTextLeft1:SetFormattedText('%s%s', dnd(), UnitName(unit))
 		if guild then
-			GameTooltipTextLeft2:SetFormattedText('<%s>', guild)
+			GameTooltipTextLeft2:SetFormattedText('%s <%s>', rank, guild)
 			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), race)
 		else
 			GameTooltip:AddLine("",1,1,1)
