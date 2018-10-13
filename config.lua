@@ -45,8 +45,10 @@ local configCallback = function() end
 	}}
 
 
-bdCore:addModule("Tooltips", defaults)
-local config = bdCore.config.profile['Tooltips']
+bdConfigLib:RegisterModule({
+	name = "Tooltips"
+}, defaults, BD_persistent)
+local config = bdConfigLib.profile['Tooltips']
 
 local configCallback = function()
 	if config.mott then
