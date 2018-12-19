@@ -1,6 +1,6 @@
 ﻿local addonName, bdt = ...
 
-local config = bdConfigLib.profile['Tooltips']
+local config = bdConfigLib:GetSave('Tooltips')
 
 
 -----------------------------------

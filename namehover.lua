@@ -1,6 +1,6 @@
 local addonName, bdt = ...
 
-local config = bdConfigLib.profile['Tooltips']
+local config = bdConfigLib:GetSave("Tooltips")
 
 local function getcolor()
 	local reaction = UnitReaction("mouseover", "player") or 5
