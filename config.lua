@@ -45,10 +45,9 @@ local configCallback = function() end
 	}}
 
 
-bdConfigLib:RegisterModule({
+local config = bdConfigLib:RegisterModule({
 	name = "Tooltips"
 }, defaults, "BD_persistent")
-local config = bdConfigLib:GetSave('Tooltips')
 
 local configCallback = function()
 	if config.mott then
