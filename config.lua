@@ -16,6 +16,11 @@ local configCallback = function() end
 		value = true,
 		label = "Main Tooltips"
 	}}
+	defaults[#defaults+1] = {showrealm = {
+		type = "checkbox",
+		value = true,
+		label = "Show Realm"
+	}}
 	defaults[#defaults+1] = {enableitemids = {
 		type = "checkbox",
 		value = true,

@@ -85,13 +85,17 @@ function setUnit(self)
 	local numLines = self:NumLines()
 
 	local line = 1;
-	name = GetUnitName(unit)
+	local name, realm = UnitName(unit)
 	local guild, rank = GetGuildInfo(unit)
 	local race = UnitRace(unit) or ""
 	local classification = UnitClassification(unit)
 	local creatureType = UnitCreatureType(unit)
 	local factionGroup = select(1, UnitFactionGroup(unit))
 	local reactionColor = bdt:getReactionColor(unit)
+
+	if (config.showrealm and realm) then
+		name = name.." - "..realm
+	end
 	
 
 	local level = UnitLevel(unit)
@@ -127,7 +131,7 @@ function setUnit(self)
 	lines[1] = GameTooltipTextLeft1:GetText()
 	
 	if UnitIsPlayer(unit) then
-		GameTooltipTextLeft1:SetFormattedText('%s%s', dnd(), UnitName(unit))
+		GameTooltipTextLeft1:SetFormattedText('%s%s', dnd(), name)
 		if guild then
 			GameTooltipTextLeft2:SetFormattedText('%s <%s>', rank, guild)
 			GameTooltipTextLeft3:SetFormattedText('|cff%s%s|r |cff%s%s|r', RGBPercToHex(levelColor), level, RGBPercToHex(friendColor), race)
