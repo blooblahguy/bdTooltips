@@ -104,17 +104,17 @@ end
 local colors = {}
 colors.tapped = {.6,.6,.6}
 colors.offline = {.6,.6,.6}
-
--- store class colors
+colors.reaction = {}
 colors.class = {}
+
+-- class colors
 for eclass, color in next, RAID_CLASS_COLORS do
 	if not colors.class[eclass] then
 		colors.class[eclass] = {color.r, color.g, color.b}
 	end
 end
 
--- store reaction colors
-colors.reaction = {}
+-- faction colors
 for eclass, color in next, FACTION_BAR_COLORS do
 	if not colors.reaction[eclass] then
 		colors.reaction[eclass] = {color.r, color.g, color.b}
@@ -183,7 +183,7 @@ function bdt:getReactionColor(unit)
 		return unpack(colors.class[select(2, UnitClass(unit))])
 	elseif UnitIsTapDenied(unit) then
 		return unpack(colors.tapped)
-	else
+	elseif (colors.reaction[UnitReaction(unit, 'player')]) then
 		return unpack(colors.reaction[UnitReaction(unit, 'player')])
 	end
 end
