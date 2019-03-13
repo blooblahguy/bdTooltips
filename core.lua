@@ -23,13 +23,11 @@ local tooltips = {
 	'ShoppingTooltip2',
 	'DropDownList1MenuBackdrop',
 	'DropDownList2MenuBackdrop',
-	'WorldMapTooltip',
-	'WorldMapCompareTooltip1',
-	'WorldMapCompareTooltip2',
 }
 
 for i = 1, #tooltips do
 	local frame = _G[tooltips[i]]
+	-- print(tooltips[i]);
 	bdt:skin(frame)
 end
 
