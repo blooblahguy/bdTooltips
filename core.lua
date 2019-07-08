@@ -6,11 +6,29 @@ local config = bdConfigLib:GetSave('Tooltips')
 -----------------------------------
 -- Skinning default tooltips
 -----------------------------------
+function bdt:strip(frame)
+	local regions = {frame:GetRegions()}
+
+	-- if (#regions == frame.region_count) then return end
+	-- frame.region_count = #regions
+
+	for k, v in pairs(regions) do
+		if (not v.protected) then
+			if v:GetObjectType() == "Texture" then
+				v:SetTexture(nil)
+				v:Hide()
+				v.Show = noop
+			end
+		end
+	end
+end
+
 function bdt:skin(tooltip)
 	if (not tooltip.background) then
 		bdCore:setBackdrop(tooltip)
 	end
-	bdCore:StripTextures(tooltip)
+	
+	bdt:strip(tooltip)
 	tooltip:SetScale(1)
 end
 -- for skinning all the tooltips in the UI
@@ -27,8 +45,15 @@ local tooltips = {
 
 for i = 1, #tooltips do
 	local frame = _G[tooltips[i]]
-	-- print(tooltips[i]);
 	bdt:skin(frame)
+
+	if (not frame.hooked) then
+		frame:SetScript("OnShow", function()
+			bdt:strip(frame)
+		end)
+
+		frame.hooked = true
+	end
 end
 
 local function whosTargeting(self)
